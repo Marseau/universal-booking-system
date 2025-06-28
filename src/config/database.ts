@@ -17,32 +17,40 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   }
 })
 
-// Helper function to set tenant context for RLS
-export const setTenantContext = async (tenantId: string) => {
-  const { error } = await supabase.rpc('set_config', {
-    setting_name: 'app.current_tenant_id',
-    setting_value: tenantId,
-    is_local: true
+// Helper function to create tenant-specific client
+export const getTenantClient = (tenantId: string) => {
+  return createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      persistSession: false
+    },
+    db: {
+      schema: 'public'
+    },
+    global: {
+      headers: {
+        'X-Tenant-ID': tenantId
+      }
+    }
   })
-  
-  if (error) {
-    console.error('Error setting tenant context:', error)
-    throw error
-  }
 }
 
 // Helper function to bypass RLS for admin operations
-export const bypassRLS = async () => {
-  const { error } = await supabase.rpc('set_config', {
-    setting_name: 'app.bypass_rls',
-    setting_value: 'true',
-    is_local: true
-  })
+export const getAdminClient = () => {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
-  if (error) {
-    console.error('Error bypassing RLS:', error)
-    throw error
+  if (!serviceKey) {
+    console.warn('SUPABASE_SERVICE_ROLE_KEY not provided, using anon key')
+    return supabase
   }
+  
+  return createClient<Database>(supabaseUrl, serviceKey, {
+    auth: {
+      persistSession: false
+    },
+    db: {
+      schema: 'public'
+    }
+  })
 }
 
 export default supabase

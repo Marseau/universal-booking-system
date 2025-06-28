@@ -1,5 +1,5 @@
 import express from 'express'
-import { supabase, bypassRLS } from '../config/database'
+import { supabase, getAdminClient } from '../config/database'
 import { resolveTenant } from '../middleware/tenant-resolver'
 import { BusinessDomain } from '../types/database.types'
 
@@ -11,9 +11,9 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    await bypassRLS()
+    const adminClient = getAdminClient()
     
-    const { data: tenants, error } = await supabase
+    const { data: tenants, error } = await adminClient
       .from('tenants')
       .select(`
         id,
@@ -89,24 +89,26 @@ router.post('/', async (req, res) => {
 
     // Validação básica
     if (!name || !slug || !domain || !email || !phone || !business_name) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Missing required fields',
         required: ['name', 'slug', 'domain', 'email', 'phone', 'business_name']
       })
+      return
     }
 
     // Validar domain enum
     const validDomains: BusinessDomain[] = ['legal', 'healthcare', 'education', 'beauty', 'sports', 'consulting', 'other']
     if (!validDomains.includes(domain)) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid domain',
         valid_domains: validDomains
       })
+      return
     }
 
-    await bypassRLS()
+    const adminClient = getAdminClient()
 
-    const { data: tenant, error } = await supabase
+    const { data: tenant, error } = await adminClient
       .from('tenants')
       .insert({
         name,
@@ -128,10 +130,11 @@ router.post('/', async (req, res) => {
 
     if (error) {
       if (error.code === '23505') {
-        return res.status(409).json({
+        res.status(409).json({
           error: 'Tenant already exists',
           message: 'Slug, email or phone already in use'
         })
+        return
       }
       throw error
     }

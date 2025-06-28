@@ -16,12 +16,15 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "commit": "git add -A && git commit -m",
+    "commit": "./scripts/commit.sh",
+    "auto-commit": "./scripts/auto-commit.sh",
     "push": "git push origin main",
     "deploy": "npm run build && npm run push",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
-    "logs": "tail -f logs/app.log"
+    "logs": "tail -f logs/app.log",
+    "setup": "npm install && npm run build",
+    "serve": "npm run build && npm start"
   },
   "repository": {
     "type": "git",

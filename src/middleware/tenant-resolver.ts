@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { supabase, setTenantContext } from '../config/database'
+import { supabase } from '../config/database'
 
 // Extend Request interface to include tenant
 declare global {
@@ -22,12 +22,12 @@ declare global {
  * 3. Query parameter (?tenant=slug)
  * 4. URL path (/tenants/:slug/...)
  */
-export const resolveTenant = async (req: Request, res: Response, next: NextFunction) => {
+export const resolveTenant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     let tenantSlug: string | null = null
 
     // Strategy 1: Header
-    tenantSlug = req.headers['x-tenant-slug'] as string
+    tenantSlug = req.headers['x-tenant-slug'] as string || null
 
     // Strategy 2: Subdomain
     if (!tenantSlug) {
@@ -35,29 +35,30 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       if (host && host.includes('.')) {
         const parts = host.split('.')
         if (parts.length > 2) {
-          tenantSlug = parts[0]
+          tenantSlug = parts[0] || null
         }
       }
     }
 
     // Strategy 3: Query parameter
     if (!tenantSlug) {
-      tenantSlug = req.query.tenant as string
+      tenantSlug = (req.query.tenant as string) || null
     }
 
     // Strategy 4: URL path
     if (!tenantSlug) {
       const pathMatch = req.path.match(/^\/tenants\/([^\/]+)/)
       if (pathMatch) {
-        tenantSlug = pathMatch[1]
+        tenantSlug = pathMatch[1] || null
       }
     }
 
     if (!tenantSlug) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Tenant not specified',
         message: 'Please provide tenant via header X-Tenant-Slug, subdomain, query param, or URL path'
       })
+      return
     }
 
     // Fetch tenant from database
@@ -69,14 +70,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       .single()
 
     if (error || !tenant) {
-      return res.status(404).json({
+      res.status(404).json({
         error: 'Tenant not found',
         tenant_slug: tenantSlug
       })
+      return
     }
-
-    // Set tenant context for RLS
-    await setTenantContext(tenant.id)
 
     // Add tenant to request
     req.tenant = {
@@ -99,10 +98,10 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
 /**
  * Middleware opcional para resolver tenant (não falha se não encontrar)
  */
-export const optionalTenant = async (req: Request, res: Response, next: NextFunction) => {
+export const optionalTenant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Try to resolve tenant, but don't fail if not found
-    await resolveTenant(req, res, (error) => {
+    await resolveTenant(req, res, () => {
       // Continue even if tenant resolution fails
       next()
     })

@@ -5,6 +5,9 @@ import compression from 'compression'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
 
+// Import routes
+import tenantsRouter from './routes/tenants'
+
 // Load environment variables
 dotenv.config()
 
@@ -40,19 +43,27 @@ app.get('/health', (req, res) => {
   })
 })
 
-// API routes
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
     message: '🚀 Universal Booking System API',
     description: 'Sistema Universal de Agendamentos Multi-Tenant',
     version: '1.0.0',
     docs: '/docs',
-    health: '/health'
+    health: '/health',
+    endpoints: {
+      tenants: '/api/tenants',
+      appointments: '/api/appointments (coming soon)',
+      whatsapp: '/api/whatsapp (coming soon)',
+      ai: '/api/ai (coming soon)'
+    }
   })
 })
 
-// API routes will be added here
-// app.use('/api/tenants', tenantsRouter)
+// API routes
+app.use('/api/tenants', tenantsRouter)
+
+// Future routes will be added here:
 // app.use('/api/appointments', appointmentsRouter) 
 // app.use('/api/whatsapp', whatsappRouter)
 // app.use('/api/ai', aiRouter)
@@ -85,6 +96,7 @@ app.listen(PORT, () => {
   console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`)
   console.log(`🔗 Health check: http://localhost:${PORT}/health`)
   console.log(`📖 API docs: http://localhost:${PORT}/`)
+  console.log(`🏢 Tenants API: http://localhost:${PORT}/api/tenants`)
 })
 
 export default app
