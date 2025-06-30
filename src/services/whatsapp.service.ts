@@ -60,7 +60,14 @@ export class WhatsAppService {
       }
     }
 
-    return this.sendMessage(message)
+    const success = await this.sendMessage(message)
+    
+    // Store system message in conversation history
+    if (success) {
+      await this.storeSystemMessage(to, text, 'text')
+    }
+    
+    return success
   }
 
   /**
@@ -224,10 +231,59 @@ export class WhatsAppService {
       // Store conversation history
       await this.storeConversationMessage(message, userName)
 
-      // Route to AI agent for processing
-      // This will be implemented in the AI service
-      const aiService = new (await import('./ai.service')).AIService()
-      await aiService.processIncomingMessage(message, contacts)
+      // Check if user needs onboarding (import here to avoid circular dependency)
+      const { onboardingFlowService } = await import('./onboarding-flow.service')
+      const { phoneValidationService } = await import('./phone-validation.service')
+      
+      // For now, we'll use a default tenant (in production, implement proper tenant resolution)
+      const defaultTenantId = process.env.DEFAULT_TENANT_ID
+      
+      if (defaultTenantId) {
+        // Check onboarding status
+        const onboardingStatus = await phoneValidationService.getUserOnboardingStatus(
+          message.from, 
+          defaultTenantId
+        )
+
+        if (onboardingStatus.needsOnboarding) {
+          // Start or continue onboarding
+          if (!onboardingStatus.exists) {
+            await onboardingFlowService.startOnboarding(
+              message.from,
+              defaultTenantId,
+              userName
+            )
+            return // Don't process with AI during onboarding start
+          } else {
+            // Continue onboarding flow
+            const messageText = this.extractMessageText(message)
+            const responseType = this.detectResponseType(message)
+            
+            const onboardingResult = await onboardingFlowService.continueOnboarding(
+              message.from,
+              defaultTenantId,
+              messageText,
+              responseType
+            )
+
+            if (onboardingResult.success && !onboardingResult.isCompleted) {
+              return // Don't process with AI if still in onboarding
+            }
+          }
+        }
+      }
+
+      // Route to AI agent for processing (only after onboarding or for existing users)
+      try {
+        const aiService = new (await import('./ai.service')).AIService()
+        await aiService.processIncomingMessage(message, contacts)
+      } catch (aiError) {
+        console.log('AI service not available, using basic response')
+        await this.sendTextMessage(
+          message.from,
+          'Olá! Recebi sua mensagem. Em que posso ajudar você?'
+        )
+      }
 
     } catch (error) {
       console.error('Error handling incoming message:', error)
@@ -255,39 +311,38 @@ export class WhatsAppService {
    */
   private async storeConversationMessage(
     message: WhatsAppMessage,
-    userName: string
+    userName: string,
+    tenantId?: string,
+    userId?: string,
+    intentDetected?: string,
+    confidenceScore?: number,
+    conversationContext?: any
   ): Promise<void> {
     try {
-      let messageContent = ''
-
-      switch (message.type) {
-        case 'text':
-          messageContent = message.text?.body || ''
-          break
-        case 'button':
-          messageContent = message.button?.text || ''
-          break
-        case 'interactive':
-          if (message.interactive?.button_reply) {
-            messageContent = message.interactive.button_reply.title
-          } else if (message.interactive?.list_reply) {
-            messageContent = message.interactive.list_reply.title
-          }
-          break
-        default:
-          messageContent = `[${message.type.toUpperCase()}]`
+      // Import here to avoid circular dependency
+      const { conversationHistoryService } = await import('./conversation-history.service')
+      
+      // Use default tenant if not provided (in production, implement proper tenant resolution)
+      const effectiveTenantId = tenantId || process.env.DEFAULT_TENANT_ID
+      
+      if (!effectiveTenantId) {
+        console.warn('No tenant ID available for storing conversation')
+        return
       }
 
-      // TODO: Fix database schema compatibility
-      console.log('Storing conversation message:', {
-        phone: message.from,
-        user: userName,
-        content: messageContent,
-        type: message.type
-      })
+      await conversationHistoryService.storeMessage(
+        message,
+        effectiveTenantId,
+        userName,
+        userId,
+        intentDetected,
+        confidenceScore,
+        conversationContext
+      )
 
     } catch (error) {
       console.error('Error storing conversation message:', error)
+      // Don't throw error to avoid breaking message processing
     }
   }
 
@@ -361,6 +416,145 @@ export class WhatsAppService {
     } catch (error) {
       console.error('Error downloading media:', error)
       return null
+    }
+  }
+
+  /**
+   * Send template message (for billing notifications)
+   */
+  async sendTemplateMessage(
+    to: string,
+    templateName: string,
+    templateData: Record<string, string>
+  ): Promise<boolean> {
+    try {
+      const message: WhatsAppOutboundMessage = {
+        messaging_product: 'whatsapp',
+        to,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: {
+            code: 'pt_BR'
+          },
+          components: [
+            {
+              type: 'body',
+              parameters: Object.values(templateData).map(value => ({
+                type: 'text',
+                text: value
+              }))
+            }
+          ]
+        }
+      }
+
+      return this.sendMessage(message)
+    } catch (error) {
+      console.error('Error sending template message:', error)
+      // Fallback to regular text message for billing alerts
+      const fallbackMessage = this.buildFallbackBillingMessage(templateName, templateData)
+      return this.sendTextMessage(to, fallbackMessage)
+    }
+  }
+
+  /**
+   * Build fallback message for billing alerts when templates are not available
+   */
+  private buildFallbackBillingMessage(templateName: string, data: Record<string, string>): string {
+    const businessName = data.business_name || 'Sua empresa'
+    const alertTitle = data.alert_title || 'Alerta de Assinatura'
+    const alertMessage = data.alert_message || 'Verifique sua assinatura'
+    const actionUrl = data.action_url || 'https://ubs.com/billing'
+
+    const emoji = alertTitle.includes('🚨') ? '🚨' : 
+                 alertTitle.includes('⚠️') ? '⚠️' : 'ℹ️'
+
+    return `${emoji} *${alertTitle}*
+
+Olá, ${businessName}!
+
+${alertMessage}
+
+✅ *Ação necessária:* Acesse seu painel de billing para resolver esta questão.
+
+🔗 ${actionUrl}
+
+---
+_Mensagem automática do UBS_`
+  }
+
+  /**
+   * Extract text content from WhatsApp message
+   */
+  private extractMessageText(message: WhatsAppMessage): string {
+    switch (message.type) {
+      case 'text':
+        return message.text?.body || ''
+      case 'button':
+        return message.button?.payload || message.button?.text || ''
+      case 'interactive':
+        if (message.interactive?.button_reply) {
+          return message.interactive.button_reply.id
+        } else if (message.interactive?.list_reply) {
+          return message.interactive.list_reply.id
+        }
+        return ''
+      default:
+        return `[${message.type.toUpperCase()}]`
+    }
+  }
+
+  /**
+   * Detect response type from WhatsApp message
+   */
+  private detectResponseType(message: WhatsAppMessage): 'text' | 'button' | 'list' {
+    switch (message.type) {
+      case 'text':
+        return 'text'
+      case 'button':
+      case 'interactive':
+        if (message.interactive?.button_reply) {
+          return 'button'
+        } else if (message.interactive?.list_reply) {
+          return 'list'
+        }
+        return 'button'
+      default:
+        return 'text'
+    }
+  }
+
+  /**
+   * Store system message in conversation history
+   */
+  private async storeSystemMessage(
+    phoneNumber: string,
+    messageContent: string,
+    messageType: string = 'text',
+    conversationContext?: any
+  ): Promise<void> {
+    try {
+      // Import here to avoid circular dependency
+      const { conversationHistoryService } = await import('./conversation-history.service')
+      
+      const tenantId = process.env.DEFAULT_TENANT_ID
+      if (!tenantId) {
+        console.warn('No tenant ID available for storing system message')
+        return
+      }
+
+      await conversationHistoryService.storeSystemMessage(
+        tenantId,
+        phoneNumber,
+        messageContent,
+        messageType,
+        conversationContext
+      )
+
+    } catch (error) {
+      console.error('Error storing system message:', error)
+      // Don't throw error to avoid breaking message flow
     }
   }
 }

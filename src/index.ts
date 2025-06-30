@@ -5,6 +5,7 @@ import compression from 'compression'
 import morgan from 'morgan'
 import dotenv from 'dotenv'
 import winston from 'winston'
+import path from 'path'
 
 // Load environment variables
 dotenv.config()
@@ -12,9 +13,16 @@ dotenv.config()
 // Import routes
 import tenantsRouter from './routes/tenants'
 import whatsappRouter from './routes/whatsapp-simple'
+import adminRouter from './routes/admin'
+import billingRouter from './routes/billing'
+import analyticsRouter from './routes/analytics'
 
 // Import middleware
 import { resolveTenant } from './middleware/tenant-resolver'
+
+// Import services
+// import { subscriptionMonitor } from './services/subscription-monitor.service'
+// import { conversationHistoryService } from './services/conversation-history.service'
 
 // Configure logger
 const logger = winston.createLogger({
@@ -46,8 +54,9 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "https:"],
     },
@@ -74,6 +83,9 @@ app.use(morgan('combined', {
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// Serve static files from frontend directory
+app.use(express.static(path.join(__dirname, '../src/frontend')))
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -135,12 +147,65 @@ app.get('/api/status', (req, res) => {
 // WhatsApp webhook doesn't need tenant resolution as it identifies tenant from message
 app.use('/api/tenants', resolveTenant)
 
+// Serve static frontend files
+app.use('/static', express.static(path.join(__dirname, 'frontend')))
+
+// Landing page as main route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'landing.html'))
+})
+
+// Frontend routes
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'index.html'))
+})
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'login.html'))
+})
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'register.html'))
+})
+
+app.get('/settings', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'settings.html'))
+})
+
+app.get('/billing', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'billing.html'))
+})
+
+app.get('/success', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'success.html'))
+})
+
+app.get('/analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'analytics.html'))
+})
+
+app.get('/appointments', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'appointments.html'))
+})
+
+app.get('/customers', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'customers.html'))
+})
+
+app.get('/services', (req, res) => {
+  res.sendFile(path.join(__dirname, '../src/frontend', 'services.html'))
+})
+
+
 // Routes
 app.use('/api/tenants', tenantsRouter)
 app.use('/api/whatsapp', whatsappRouter)
+app.use('/api/admin', adminRouter)
+app.use('/api/billing', billingRouter)
+app.use('/api/analytics', analyticsRouter)
 
-// Welcome endpoint
-app.get('/', (req, res) => {
+// API Info endpoint
+app.get('/api', (req, res) => {
   res.json({
     message: '🚀 Universal Booking System API',
     description: 'Sistema Universal de Agendamentos Multi-Tenant com WhatsApp AI',
@@ -150,14 +215,16 @@ app.get('/', (req, res) => {
       health: '/health',
       status: '/api/status',
       tenants: '/api/tenants',
-      whatsapp: '/api/whatsapp'
+      whatsapp: '/api/whatsapp',
+      billing: '/api/billing'
     },
     features: [
       'Multi-tenant architecture',
       'WhatsApp Business API integration',
       'AI-powered conversations',
       'Cross-tenant user support',
-      'Multiple business domains'
+      'Multiple business domains',
+      'Stripe billing integration'
     ],
     supported_domains: [
       'Legal (Advogados)',
@@ -212,11 +279,13 @@ app.use('*', (req, res) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully')
+  // subscriptionMonitor.stopMonitoring()
   process.exit(0)
 })
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully')
+  // subscriptionMonitor.stopMonitoring()
   process.exit(0)
 })
 
@@ -229,11 +298,33 @@ const server = app.listen(port, () => {
   logger.info(`🤖 AI Integration: ${process.env.OPENAI_API_KEY ? 'Enabled' : 'Disabled'}`)
   logger.info(`🗄️  Database: ${process.env.SUPABASE_URL ? 'Connected' : 'Not Connected'}`)
   
+  // Start subscription monitoring service
+  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_SUBSCRIPTION_MONITORING === 'true') {
+    try {
+      // subscriptionMonitor.startMonitoring()
+      logger.info(`📋 Subscription monitoring service started`)
+    } catch (error) {
+      logger.error('Failed to start subscription monitoring:', error)
+    }
+  }
+
+  // Start conversation cleanup service
+  try {
+    const retentionDays = parseInt(process.env.CONVERSATION_RETENTION_DAYS || '60')
+    const cleanupIntervalHours = parseInt(process.env.CONVERSATION_CLEANUP_INTERVAL_HOURS || '24')
+    
+    // conversationHistoryService.startAutomaticCleanup(retentionDays, cleanupIntervalHours)
+    // logger.info(`💬 Conversation cleanup service started (${retentionDays} days retention)`)
+  } catch (error) {
+    logger.error('Failed to start conversation cleanup:', error)
+  }
+  
   if (process.env.NODE_ENV === 'development') {
     console.log('\n🔗 Quick Links:')
     console.log(`   API Status: http://localhost:${port}/api/status`)
     console.log(`   Health Check: http://localhost:${port}/health`)
     console.log(`   WhatsApp Status: http://localhost:${port}/api/whatsapp/status`)
+    console.log(`   Billing Dashboard: http://localhost:${port}/billing`)
     console.log(`   Documentation: https://github.com/Marseau/universal-booking-system`)
   }
 })

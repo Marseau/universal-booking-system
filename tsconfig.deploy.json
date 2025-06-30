@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist"
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/services/advanced-multimodal.service.ts",
+    "src/services/ai-complex.service.ts", 
+    "src/services/ai-testing.service.ts",
+    "src/services/calendar.service.ts",
+    "src/services/email.service.ts",
+    "src/services/stripe.service.ts",
+    "src/services/phone-validation.service.ts",
+    "src/services/onboarding-flow.service.ts",
+    "src/services/multimodal-core.service.ts",
+    "src/services/function-calling/**",
+    "src/services/agents/general-agent.ts",
+    "src/services/conversation-history.service.ts"
+  ],
+  "include": [
+    "src/index.ts",
+    "src/config/*",
+    "src/middleware/*", 
+    "src/routes/admin.ts",
+    "src/routes/billing.ts",
+    "src/routes/tenants.ts",
+    "src/routes/whatsapp-simple.ts",
+    "src/services/subscription-monitor.service.ts",
+    "src/services/analytics.service.ts",
+    "src/types/*",
+    "src/utils/*"
+  ]
+}

@@ -71,7 +71,11 @@ export class MemoryService {
 
 class SessionMemoryManager implements MemoryManager {
   private storage: MemoryStorage
-  private sessionId: string
+  public sessionId: string
+  public context: ConversationContext
+  public shortTermMemory: Array<{ key: string, value: any, timestamp: Date }>
+  public longTermMemory: Array<{ key: string, value: any, timestamp: Date }>
+  public lastAccessed: Date
   private lastAccess: number
   private ttl: number
 
@@ -79,10 +83,14 @@ class SessionMemoryManager implements MemoryManager {
     this.sessionId = sessionId
     this.ttl = ttl
     this.lastAccess = Date.now()
+    this.lastAccessed = new Date()
+    this.shortTermMemory = []
+    this.longTermMemory = []
+    this.context = {} as ConversationContext
     this.storage = {
       shortTerm: new Map(),
       longTerm: new Map(),
-      context: {} as ConversationContext
+      context: this.context
     }
   }
 
@@ -93,8 +101,10 @@ class SessionMemoryManager implements MemoryManager {
     this.updateLastAccess()
     
     const targetMap = type === 'short' ? this.storage.shortTerm : this.storage.longTerm
+    const targetArray = type === 'short' ? this.shortTermMemory : this.longTermMemory
+    const timestamp = new Date()
     
-    // Add timestamp for short-term memory expiration
+    // Add to storage map
     if (type === 'short') {
       targetMap.set(key, {
         value,
@@ -103,6 +113,14 @@ class SessionMemoryManager implements MemoryManager {
       })
     } else {
       targetMap.set(key, { value, timestamp: Date.now() })
+    }
+    
+    // Add to interface array
+    const existingIndex = targetArray.findIndex(item => item.key === key)
+    if (existingIndex >= 0) {
+      targetArray[existingIndex] = { key, value, timestamp }
+    } else {
+      targetArray.push({ key, value, timestamp })
     }
   }
 
@@ -184,6 +202,7 @@ class SessionMemoryManager implements MemoryManager {
    */
   private updateLastAccess(): void {
     this.lastAccess = Date.now()
+    this.lastAccessed = new Date()
     // Clean expired entries periodically
     if (Math.random() < 0.1) { // 10% chance
       this.cleanExpiredShortTerm()

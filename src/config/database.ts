@@ -53,4 +53,7 @@ export const getAdminClient = () => {
   })
 }
 
+// Legacy alias for admin client
+export const supabaseAdmin = getAdminClient()
+
 export default supabase

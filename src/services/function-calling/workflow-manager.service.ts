@@ -31,8 +31,8 @@ export interface WorkflowStep {
   type: 'function_call' | 'condition' | 'parallel' | 'sequential' | 'webhook' | 'notification'
   config: StepConfig
   dependencies: string[]
-  onSuccess?: string // next step ID
-  onFailure?: string // next step ID
+  onSuccess?: string | undefined // next step ID
+  onFailure?: string | undefined // next step ID
   retryPolicy?: {
     maxRetries: number
     delayMs: number

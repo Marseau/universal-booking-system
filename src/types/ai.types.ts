@@ -47,6 +47,11 @@ export interface TenantConfig {
   services: ServiceSummary[]
   businessHours: BusinessHours
   customFields: Record<string, any>
+  whatsapp?: {
+    phoneNumberId: string
+    accessToken: string
+    webhookToken: string
+  }
 }
 
 export interface AISettings {
@@ -62,6 +67,8 @@ export interface AISettings {
   upsellEnabled: boolean
   maxResponseLength: number
   responseStyle: 'concise' | 'detailed' | 'conversational'
+  contextWindows?: number
+  maxConversationLength?: number
 }
 
 export interface BusinessHours {
@@ -299,6 +306,24 @@ export interface MediaContent {
   filename?: string
   transcription?: string // for audio/video
   analysis?: string // for images
+}
+
+export interface MultiModalContent {
+  id: string
+  type: 'image' | 'audio' | 'video' | 'document' | 'text'
+  content: Buffer
+  mimeType: string
+  filename?: string
+  metadata?: {
+    size: number
+    duration?: number
+    dimensions?: { width: number; height: number }
+  }
+  timestamp: Date
+}
+
+export interface ExtractedEntity extends Entity {
+  source: string
 }
 
 export interface MediaProcessor {

@@ -310,13 +310,16 @@ export class IntentRouterService {
       if (matches.length > 0) {
         const processedMatches = extractor.processor(matches)
         processedMatches.forEach((value, index) => {
-          entities.push({
-            type: entityType as any,
-            value,
-            confidence: 0.8 - (index * 0.1), // Decrease confidence for multiple matches
-            start: message.indexOf(matches[index]),
-            end: message.indexOf(matches[index]) + matches[index].length
-          })
+          const match = matches[index]
+          if (match) {
+            entities.push({
+              type: entityType as any,
+              value,
+              confidence: 0.8 - (index * 0.1), // Decrease confidence for multiple matches
+              start: message.indexOf(match),
+              end: message.indexOf(match) + match.length
+            })
+          }
         })
       }
     }
@@ -415,7 +418,7 @@ export class IntentRouterService {
 
     // Sort by confidence and return best match
     matches.sort((a, b) => b.confidence - a.confidence)
-    return matches[0]
+    return matches[0]!
   }
 
   /**
@@ -493,7 +496,7 @@ export class IntentRouterService {
    * Get domain-specific boost for intent
    */
   private getDomainBoost(intentType: IntentType, domain: BusinessDomain): number {
-    const domainBoosts: Record<BusinessDomain, Record<IntentType, number>> = {
+    const domainBoosts: Partial<Record<BusinessDomain | 'other', Partial<Record<IntentType, number>>>> = {
       'healthcare': {
         'booking_request': 0.2,
         'emergency': 0.3,
@@ -521,7 +524,8 @@ export class IntentRouterService {
         'booking_request': 0.1,
         'service_inquiry': 0.2,
         'price_inquiry': 0.2
-      }
+      },
+      'other': {}
     }
 
     return domainBoosts[domain]?.[intentType] || 0

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamentos - UBS Dashboard</title>
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2D5A9B;
+            --secondary-color: #F8F9FA;
+            --success-color: #28A745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --text-dark: #2C3E50;
+            --text-light: #6C757D;
+            --border-color: #E9ECEF;
+            --shadow: 0 4px 20px rgba(45, 90, 155, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--secondary-color);
+            color: var(--text-dark);
+        }
+
+        .top-header {
+            background: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .appointments-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .appointments-header {
+            background: linear-gradient(135deg, var(--primary-color), #4A7BC8);
+            color: white;
+            padding: 1.5rem;
+            margin: 0;
+        }
+
+        .appointment-row {
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .appointment-row:hover {
+            background: rgba(45, 90, 155, 0.05);
+        }
+
+        .appointment-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-confirmed { background: rgba(23, 162, 184, 0.1); color: var(--info-color); }
+        .status-completed { background: rgba(40, 167, 69, 0.1); color: var(--success-color); }
+        .status-cancelled { background: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
+        .status-pending { background: rgba(255, 193, 7, 0.1); color: var(--warning-color); }
+        .status-no_show { background: rgba(108, 117, 125, 0.1); color: #6c757d; }
+
+        .appointment-time {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .service-name {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .customer-name {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .appointment-price {
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit { background: var(--info-color); color: white; }
+        .btn-complete { background: var(--success-color); color: white; }
+        .btn-cancel { background: var(--danger-color); color: white; }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+
+        .pagination-wrapper {
+            background: white;
+            padding: 1rem;
+            border-radius: 0 0 1rem 1rem;
+        }
+
+        .calendar-view {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 1rem;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            background: var(--secondary-color);
+            color: var(--text-light);
+        }
+
+        .calendar-day.today {
+            background: rgba(45, 90, 155, 0.1);
+        }
+
+        .appointment-dot {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .quick-actions {
+                flex-direction: column;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 0;
+            }
+            
+            .calendar-day {
+                padding: 0.5rem;
+                min-height: 60px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="top-header">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0"><i class="fas fa-calendar-alt me-2"></i>Gestão de Agendamentos</h1>
+                    <p class="text-muted mb-0">Visualize e gerencie todos os agendamentos</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary me-2" onclick="toggleView()">
+                        <i class="fas fa-calendar me-1"></i><span id="viewToggleText">Calendário</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="newAppointment()">
+                        <i class="fas fa-plus"></i> Novo Agendamento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Filters -->
+        <div class="filter-card">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">Todos os status</option>
+                        <option value="confirmed">Confirmados</option>
+                        <option value="completed">Completados</option>
+                        <option value="cancelled">Cancelados</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="no_show">Não compareceu</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data Final</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Nome do cliente, serviço..." id="searchInput">
+                        <button class="btn btn-outline-secondary" onclick="applyFilters()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button class="btn btn-outline-primary me-2" onclick="applyFilters()">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                    <button class="btn btn-outline-secondary me-2" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Limpar
+                    </button>
+                    <button class="btn btn-outline-success" onclick="exportAppointments()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar View (initially hidden) -->
+        <div class="calendar-view" id="calendarView" style="display: none;">
+            <div class="calendar-header">
+                <h5 class="mb-0">
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="previousMonth()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span id="currentMonth">Janeiro 2024</span>
+                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="nextMonth()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </h5>
+                <div>
+                    <small class="text-muted">Clique em um dia para ver os agendamentos</small>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Appointments List -->
+        <div class="appointments-card" id="appointmentsView">
+            <div class="appointments-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Lista de Agendamentos
+                    </h5>
+                    <div class="text-end">
+                        <small>Total: <span id="totalCount">0</span> agendamentos</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Cliente</th>
+                            <th>Serviço</th>
+                            <th>Status</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointmentsTableBody">
+                        <tr>
+                            <td colspan="6">
+                                <div class="loading-spinner">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-wrapper">
+                <nav aria-label="Paginação de agendamentos">
+                    <ul class="pagination justify-content-center mb-0" id="pagination">
+                        <!-- Pagination will be populated by JavaScript -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Modal -->
+    <div class="modal fade" id="appointmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="appointmentModalBody">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-success" onclick="completeAppointment()">
+                        <i class="fas fa-check"></i> Completar
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="editAppointment()">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="cancelAppointment()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+        let appointments = [];
+        let currentView = 'list'; // 'list' or 'calendar'
+        let currentDate = new Date();
+        let selectedAppointment = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            loadAppointments();
+        });
+
+        function initializePage() {
+            // Set default dates
+            const today = new Date();
+            const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('startDate').value = today.toISOString().split('T')[0];
+            document.getElementById('endDate').value = nextWeek.toISOString().split('T')[0];
+
+            // Add event listeners
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
+            document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+        }
+
+        // Load appointments data
+        async function loadAppointments(page = 1) {
+            try {
+                showLoading();
+                
+                const queryParams = new URLSearchParams({
+                    page: page.toString(),
+                    limit: '20',
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/admin/appointments?${queryParams}`);
+                if (!response.ok) throw new Error('Failed to load appointments');
+                
+                const data = await response.json();
+                appointments = data.appointments || [];
+                totalPages = data.totalPages || 1;
+                currentPage = page;
+
+                updateAppointmentsTable();
+                updatePagination();
+                updateTotalCount(data.total || 0);
+
+                if (currentView === 'calendar') {
+                    updateCalendar();
+                }
+                
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+                showError('Erro ao carregar agendamentos');
+            }
+        }
+
+        // Update appointments table
+        function updateAppointmentsTable() {
+            const tbody = document.getElementById('appointmentsTableBody');
+            
+            if (appointments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                <h5>Nenhum agendamento encontrado</h5>
+                                <p class="text-muted">Ajuste os filtros ou adicione novos agendamentos</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = appointments.map(appointment => `
+                <tr class="appointment-row" onclick="showAppointmentDetails('${appointment.id}')">
+                    <td>
+                        <div class="appointment-time">
+                            ${formatDateTime(appointment.start_time)}
+                        </div>
+                        <small class="text-muted">${formatDuration(appointment.duration_minutes)}</small>
+                    </td>
+                    <td>
+                        <div class="service-name">${appointment.customer_name || 'Cliente não informado'}</div>
+                        <div class="customer-name">${appointment.customer_phone || ''}</div>
+                    </td>
+                    <td>
+                        <div class="service-name">${appointment.service_name || 'Serviço não informado'}</div>
+                        <small class="text-muted">${appointment.service_category || ''}</small>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${appointment.status}">
+                            ${getStatusLabel(appointment.status)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="appointment-price">
+                            ${formatCurrency(appointment.quoted_price || appointment.final_price)}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="quick-actions">
+                            <button class="action-btn btn-edit" onclick="event.stopPropagation(); editAppointment('${appointment.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${appointment.status === 'confirmed' ? `
+                                <button class="action-btn btn-complete" onclick="event.stopPropagation(); completeAppointment('${appointment.id}')" title="Completar">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            ${['confirmed', 'pending'].includes(appointment.status) ? `
+                                <button class="action-btn btn-cancel" onclick="event.stopPropagation(); cancelAppointment('${appointment.id}')" title="Cancelar">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const filters = {
+                status: document.getElementById('statusFilter').value,
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value,
+                search: document.getElementById('searchInput').value.trim()
+            };
+
+            // Remove empty filters
+            currentFilters = Object.fromEntries(
+                Object.entries(filters).filter(([_, value]) => value !== '')
+            );
+
+            currentPage = 1;
+            loadAppointments();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            
+            const today = new Date();
+            const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('startDate').value = today.toISOString().split('T')[0];
+            document.getElementById('endDate').value = nextWeek.toISOString().split('T')[0];
+
+            currentFilters = {};
+            currentPage = 1;
+            loadAppointments();
+        }
+
+        // Toggle between list and calendar view
+        function toggleView() {
+            const calendarView = document.getElementById('calendarView');
+            const appointmentsView = document.getElementById('appointmentsView');
+            const toggleText = document.getElementById('viewToggleText');
+
+            if (currentView === 'list') {
+                currentView = 'calendar';
+                calendarView.style.display = 'block';
+                appointmentsView.style.display = 'none';
+                toggleText.textContent = 'Lista';
+                updateCalendar();
+            } else {
+                currentView = 'list';
+                calendarView.style.display = 'none';
+                appointmentsView.style.display = 'block';
+                toggleText.textContent = 'Calendário';
+            }
+        }
+
+        // Update calendar
+        function updateCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthLabel = document.getElementById('currentMonth');
+            
+            // Update month label
+            monthLabel.textContent = currentDate.toLocaleDateString('pt-BR', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            // Generate calendar grid
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            const days = [];
+            for (let i = 0; i < 42; i++) {
+                const day = new Date(startDate);
+                day.setDate(startDate.getDate() + i);
+                days.push(day);
+            }
+
+            // Generate calendar HTML
+            const dayHeaders = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const calendarHTML = [
+                ...dayHeaders.map(day => `<div class="calendar-day text-center fw-bold" style="min-height: 40px; padding: 0.5rem;">${day}</div>`),
+                ...days.map(day => {
+                    const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                    const isToday = day.toDateString() === new Date().toDateString();
+                    const hasAppointments = appointments.some(apt => 
+                        new Date(apt.start_time).toDateString() === day.toDateString()
+                    );
+
+                    return `
+                        <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}" 
+                             onclick="selectCalendarDay('${day.toISOString()}')">
+                            <div>${day.getDate()}</div>
+                            ${hasAppointments ? '<div class="appointment-dot"></div>' : ''}
+                        </div>
+                    `;
+                })
+            ].join('');
+
+            grid.innerHTML = calendarHTML;
+        }
+
+        // Calendar navigation
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateCalendar();
+        }
+
+        function selectCalendarDay(dateString) {
+            const date = new Date(dateString);
+            const dayAppointments = appointments.filter(apt => 
+                new Date(apt.start_time).toDateString() === date.toDateString()
+            );
+
+            if (dayAppointments.length > 0) {
+                // Show appointments for selected day
+                alert(`${dayAppointments.length} agendamento(s) neste dia`);
+            }
+        }
+
+        // Show appointment details modal
+        function showAppointmentDetails(appointmentId) {
+            const appointment = appointments.find(apt => apt.id === appointmentId);
+            if (!appointment) return;
+
+            selectedAppointment = appointment;
+            
+            const modalBody = document.getElementById('appointmentModalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informações do Cliente</h6>
+                        <p><strong>Nome:</strong> ${appointment.customer_name || 'Não informado'}</p>
+                        <p><strong>Telefone:</strong> ${appointment.customer_phone || 'Não informado'}</p>
+                        <p><strong>Email:</strong> ${appointment.customer_email || 'Não informado'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Detalhes do Agendamento</h6>
+                        <p><strong>Data/Hora:</strong> ${formatDateTime(appointment.start_time)}</p>
+                        <p><strong>Serviço:</strong> ${appointment.service_name || 'Não informado'}</p>
+                        <p><strong>Duração:</strong> ${formatDuration(appointment.duration_minutes)}</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-${appointment.status}">${getStatusLabel(appointment.status)}</span></p>
+                        <p><strong>Valor:</strong> ${formatCurrency(appointment.quoted_price || appointment.final_price)}</p>
+                    </div>
+                </div>
+                ${appointment.customer_notes ? `
+                    <div class="mt-3">
+                        <h6>Observações do Cliente</h6>
+                        <p>${appointment.customer_notes}</p>
+                    </div>
+                ` : ''}
+                ${appointment.internal_notes ? `
+                    <div class="mt-3">
+                        <h6>Notas Internas</h6>
+                        <p>${appointment.internal_notes}</p>
+                    </div>
+                ` : ''}
+            `;
+
+            const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+            modal.show();
+        }
+
+        // Appointment actions
+        function newAppointment() {
+            alert('Funcionalidade de novo agendamento em desenvolvimento');
+        }
+
+        function editAppointment(appointmentId) {
+            alert(`Editar agendamento ${appointmentId}`);
+        }
+
+        function completeAppointment(appointmentId) {
+            if (confirm('Confirmar conclusão do agendamento?')) {
+                updateAppointmentStatus(appointmentId, 'completed');
+            }
+        }
+
+        function cancelAppointment(appointmentId) {
+            const reason = prompt('Motivo do cancelamento (opcional):');
+            if (reason !== null) {
+                updateAppointmentStatus(appointmentId, 'cancelled', reason);
+            }
+        }
+
+        // Update appointment status
+        async function updateAppointmentStatus(appointmentId, status, reason = null) {
+            try {
+                const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status, reason })
+                });
+
+                if (!response.ok) throw new Error('Failed to update status');
+
+                // Reload appointments
+                loadAppointments(currentPage);
+                
+                // Close modal if open
+                const modal = bootstrap.Modal.getInstance(document.getElementById('appointmentModal'));
+                if (modal) modal.hide();
+
+            } catch (error) {
+                console.error('Error updating appointment status:', error);
+                alert('Erro ao atualizar status do agendamento');
+            }
+        }
+
+        // Export appointments
+        function exportAppointments() {
+            const queryParams = new URLSearchParams(currentFilters);
+            window.open(`/api/admin/appointments/export?${queryParams}`, '_blank');
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Anterior</a>
+                </li>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Próximo</a>
+                </li>
+            `;
+
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            if (page >= 1 && page <= totalPages && page !== currentPage) {
+                loadAppointments(page);
+            }
+        }
+
+        function updateTotalCount(total) {
+            document.getElementById('totalCount').textContent = total;
+        }
+
+        // Utility functions
+        function formatDateTime(dateString) {
+            if (!dateString) return 'Data não informada';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function formatDuration(minutes) {
+            if (!minutes) return 'Duração não informada';
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            
+            if (hours > 0) {
+                return `${hours}h${mins > 0 ? ` ${mins}min` : ''}`;
+            }
+            return `${mins}min`;
+        }
+
+        function formatCurrency(value) {
+            if (!value) return 'Valor não informado';
+            return new Intl.NumberFormat('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            }).format(value);
+        }
+
+        function getStatusLabel(status) {
+            const statusLabels = {
+                confirmed: 'Confirmado',
+                completed: 'Completado',
+                cancelled: 'Cancelado',
+                pending: 'Pendente',
+                no_show: 'Não Compareceu'
+            };
+            return statusLabels[status] || status;
+        }
+
+        function showLoading() {
+            const tbody = document.getElementById('appointmentsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        <div class="loading-spinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function showError(message) {
+            console.error(message);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>

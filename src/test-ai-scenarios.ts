@@ -3,7 +3,7 @@
 import 'dotenv/config'
 import { AITestingService } from './services/ai-testing.service'
 
-async function main() {
+async function main(): Promise<void> {
   console.log('🚀 Iniciando Testes do Sistema WhatsApp AI')
   console.log('==========================================\n')
 
@@ -87,6 +87,8 @@ async function main() {
     } else {
       console.log('💡 Execute com --full para relatório completo de todos os cenários')
     }
+    
+    return Promise.resolve()
 
   } catch (error) {
     console.error('❌ Erro durante os testes:', error)
@@ -95,7 +97,7 @@ async function main() {
 }
 
 // Cenário de teste manual específico
-async function testSpecificScenario() {
+async function testSpecificScenario(): Promise<void> {
   console.log('\n🔬 TESTE MANUAL ESPECÍFICO')
   console.log('==========================')
   
@@ -144,8 +146,10 @@ async function testSpecificScenario() {
       console.log(`🤖 "${flow.response}"`)
       console.log()
     })
+    return Promise.resolve()
   } catch (error) {
     console.error('Erro no teste específico:', error)
+    return Promise.resolve()
   }
 }
 
@@ -155,5 +159,6 @@ if (require.main === module) {
     if (process.argv.includes('--manual')) {
       return testSpecificScenario()
     }
+    return Promise.resolve()
   }).catch(console.error)
 } 

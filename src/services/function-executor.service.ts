@@ -205,8 +205,8 @@ export class FunctionExecutorService {
       this.rateLimits.set(key, {
         requests: 1,
         windowStart: now,
-        windowMs: limitConfig.windowMs,
-        maxRequests: limitConfig.requests
+        windowMs: limitConfig?.windowMs || 60000,
+        maxRequests: limitConfig?.requests || 10
       })
       return { allowed: true }
     }
@@ -274,25 +274,35 @@ export class FunctionExecutorService {
 
   /**
    * Log function execution to database
+   * TODO: Add function_executions table to database schema
    */
   private async logFunctionExecution(execution: FunctionExecution): Promise<void> {
     try {
-      await supabase
-        .from('function_executions')
-        .insert({
-          execution_id: execution.id,
-          session_id: execution.context.sessionId,
-          user_id: execution.context.userId,
-          tenant_id: execution.context.tenantId,
-          function_name: execution.functionName,
-          arguments: execution.arguments,
-          status: execution.status,
-          duration_ms: execution.duration,
-          success: execution.status === 'completed',
-          error_message: execution.error,
-          result_data: execution.result?.data,
-          executed_at: new Date(execution.startTime).toISOString()
-        })
+      // TODO: Uncomment when function_executions table is available
+      // await supabase
+      //   .from('function_executions')
+      //   .insert({
+      //     execution_id: execution.id,
+      //     session_id: execution.context.sessionId,
+      //     user_id: execution.context.userId,
+      //     tenant_id: execution.context.tenantId,
+      //     function_name: execution.functionName,
+      //     arguments: execution.arguments,
+      //     status: execution.status,
+      //     duration_ms: execution.duration,
+      //     success: execution.status === 'completed',
+      //     error_message: execution.error,
+      //     result_data: execution.result?.data,
+      //     executed_at: new Date(execution.startTime).toISOString()
+      //   })
+      
+      // Log to console for now
+      console.log('Function execution logged:', {
+        id: execution.id,
+        functionName: execution.functionName,
+        status: execution.status,
+        duration: execution.duration
+      })
     } catch (error) {
       console.error('Failed to log function execution:', error)
     }

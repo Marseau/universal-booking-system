@@ -9,6 +9,82 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          id: string
+          admin_user_id: string | null
+          permission: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          admin_user_id?: string | null
+          permission: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          admin_user_id?: string | null
+          permission?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_permissions_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      admin_users: {
+        Row: {
+          id: string
+          email: string
+          password_hash: string
+          name: string
+          role: string
+          tenant_id: string | null
+          is_active: boolean | null
+          last_login_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          password_hash: string
+          name: string
+          role?: string
+          tenant_id?: string | null
+          is_active?: boolean | null
+          last_login_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          password_hash?: string
+          name?: string
+          role?: string
+          tenant_id?: string | null
+          is_active?: boolean | null
+          last_login_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       appointments: {
         Row: {
           appointment_data: Json | null
@@ -631,6 +707,156 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      calendar_sync_tokens: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          google_calendar_id: string | null
+          sync_token: string | null
+          last_sync_at: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          google_calendar_id?: string | null
+          sync_token?: string | null
+          last_sync_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          google_calendar_id?: string | null
+          sync_token?: string | null
+          last_sync_at?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_sync_tokens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      email_logs: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          recipient_email: string
+          subject: string | null
+          template_name: string | null
+          status: string | null
+          error_message: string | null
+          sent_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          recipient_email: string
+          subject?: string | null
+          template_name?: string | null
+          status?: string | null
+          error_message?: string | null
+          sent_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          recipient_email?: string
+          subject?: string | null
+          template_name?: string | null
+          status?: string | null
+          error_message?: string | null
+          sent_at?: string | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      function_executions: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          function_name: string
+          execution_time_ms: number | null
+          success: boolean | null
+          error_message: string | null
+          input_data: Json | null
+          output_data: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          function_name: string
+          execution_time_ms?: number | null
+          success?: boolean | null
+          error_message?: string | null
+          input_data?: Json | null
+          output_data?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          function_name?: string
+          execution_time_ms?: number | null
+          success?: boolean | null
+          error_message?: string | null
+          input_data?: Json | null
+          output_data?: Json | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "function_executions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      system_health_logs: {
+        Row: {
+          id: string
+          component: string
+          status: string
+          details: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          component: string
+          status: string
+          details?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          component?: string
+          status?: string
+          details?: Json | null
+          created_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
