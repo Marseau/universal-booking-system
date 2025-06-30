@@ -56,7 +56,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "data:"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "https:"],
     },
@@ -83,9 +83,6 @@ app.use(morgan('combined', {
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-
-// Serve static files from frontend directory
-app.use(express.static(path.join(__dirname, '../src/frontend')))
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -147,8 +144,8 @@ app.get('/api/status', (req, res) => {
 // WhatsApp webhook doesn't need tenant resolution as it identifies tenant from message
 app.use('/api/tenants', resolveTenant)
 
-// Serve static frontend files
-app.use('/static', express.static(path.join(__dirname, 'frontend')))
+// Serve static frontend files (CSS, JS, images)
+app.use('/static', express.static(path.join(__dirname, '../src/frontend')))
 
 // Landing page as main route
 app.get('/', (req, res) => {

@@ -6,24 +6,64 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// Apply admin authentication to all routes
+// Create auth middleware instance but don't apply globally
 const adminAuth = new AdminAuthMiddleware();
-router.use(adminAuth.verifyToken);
 
 // Middleware to parse raw body for webhook
 const rawBodyMiddleware = express.raw({ type: 'application/json' });
 
 /**
  * GET /api/billing/plans
- * Get all available plans
+ * Get all available plans (PUBLIC ENDPOINT - NO AUTH REQUIRED)
  */
 router.get('/plans', (req: Request, res: Response): any => {
   try {
-    const plans = {
-      basic: { id: 'basic', name: 'Basic', price: 29.99 },
-      pro: { id: 'pro', name: 'Pro', price: 59.99 },
-      enterprise: { id: 'enterprise', name: 'Enterprise', price: 129.99 }
-    };
+    const plans = [
+      {
+        id: 'starter',
+        name: 'Starter',
+        price: 9700, // R$ 97,00 em centavos
+        features: [
+          'Até 1.000 mensagens/mês',
+          '1 número WhatsApp',
+          'IA especializada',
+          'Google Calendar',
+          'Email automático',
+          'Dashboard básico'
+        ]
+      },
+      {
+        id: 'professional',
+        name: 'Professional',
+        price: 19700, // R$ 197,00 em centavos
+        features: [
+          'Até 5.000 mensagens/mês',
+          '3 números WhatsApp',
+          'IA especializada',
+          'Google Calendar',
+          'Email automático',
+          'Dashboard avançado',
+          'Analytics completo',
+          'Suporte prioritário'
+        ]
+      },
+      {
+        id: 'enterprise',
+        name: 'Enterprise',
+        price: 39700, // R$ 397,00 em centavos
+        features: [
+          'Mensagens ilimitadas',
+          'Números ilimitados',
+          'IA especializada',
+          'Google Calendar',
+          'Email automático',
+          'Dashboard enterprise',
+          'Analytics avançado',
+          'API personalizada',
+          'Suporte dedicado'
+        ]
+      }
+    ];
     res.json({ success: true, plans });
   } catch (error) {
     logger.error('Failed to get plans', { error });
@@ -33,9 +73,9 @@ router.get('/plans', (req: Request, res: Response): any => {
 
 /**
  * POST /api/billing/create-checkout
- * Create Stripe checkout session
+ * Create Stripe checkout session (PROTECTED)
  */
-router.post('/create-checkout', async (req: Request, res: Response): Promise<any> => {
+router.post('/create-checkout', adminAuth.verifyToken, async (req: Request, res: Response): Promise<any> => {
   try {
     const { planId, successUrl, cancelUrl } = req.body;
     const tenantId = req.admin?.tenantId;
@@ -72,9 +112,9 @@ router.post('/create-checkout', async (req: Request, res: Response): Promise<any
 
 /**
  * POST /api/billing/create-customer
- * Create Stripe customer
+ * Create Stripe customer (PROTECTED)
  */
-router.post('/create-customer', async (req: Request, res: Response): Promise<any> => {
+router.post('/create-customer', adminAuth.verifyToken, async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, name } = req.body;
     const tenantId = req.admin?.tenantId;
@@ -111,9 +151,9 @@ router.post('/create-customer', async (req: Request, res: Response): Promise<any
 
 /**
  * POST /api/billing/create-portal
- * Create customer portal session
+ * Create customer portal session (PROTECTED)
  */
-router.post('/create-portal', async (req: Request, res: Response): Promise<any> => {
+router.post('/create-portal', adminAuth.verifyToken, async (req: Request, res: Response): Promise<any> => {
   try {
     const { returnUrl } = req.body;
     const tenantId = req.admin?.tenantId;
@@ -149,9 +189,9 @@ router.post('/create-portal', async (req: Request, res: Response): Promise<any> 
 
 /**
  * GET /api/billing/subscription
- * Get tenant subscription details
+ * Get tenant subscription details (PROTECTED)
  */
-router.get('/subscription', async (req: Request, res: Response): Promise<any> => {
+router.get('/subscription', adminAuth.verifyToken, async (req: Request, res: Response): Promise<any> => {
   try {
     const tenantId = req.admin?.tenantId;
 

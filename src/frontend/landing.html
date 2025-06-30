@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UBS - Universal Booking System | Automatize seus Agendamentos com IA</title>
+    <title>UBS | Automatize seus Agendamentos com IA</title>
     <meta name="description" content="Sistema universal de agendamentos com IA para WhatsApp. Automatize seu negócio com nossa plataforma completa para salões, clínicas, consultorias e mais.">
     
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
@@ -61,16 +62,75 @@
             text-decoration: none;
         }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-color);
+        .logo-image {
+            width: 120px;
+            height: 120px;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
+            object-fit: contain;
+            margin-right: 0.75rem;
+            background: transparent;
+            /* Melhora a qualidade da imagem */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        .logo-image-large {
+            width: 160px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: contain;
+            background: transparent;
+            /* Melhora a qualidade da imagem */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* Responsivo para logo na navbar */
+        @media (max-width: 768px) {
+            .logo-image-large {
+                width: 120px;
+                height: 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-image-large {
+                width: 80px;
+                height: 40px;
+            }
+        }
+
+        /* Navegação melhorada */
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        .navbar.scrolled {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Mobile menu improvements */
+        @media (max-width: 991px) {
+            .navbar-collapse {
+                background-color: white;
+                border-radius: 10px;
+                margin-top: 10px;
+                padding: 20px;
+                box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 10px 0;
+                text-align: center;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            
+            .navbar-nav .nav-link:last-child {
+                border-bottom: none;
+            }
         }
 
         .nav-link {
@@ -88,7 +148,7 @@
             background: var(--primary-color);
             border: none;
             padding: 0.75rem 2rem;
-            border-radius: 50px;
+            border-radius: 8px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
@@ -103,7 +163,7 @@
             color: var(--primary-color);
             border-color: var(--primary-color);
             padding: 0.75rem 2rem;
-            border-radius: 50px;
+            border-radius: 8px;
             font-weight: 600;
             transition: all 0.3s ease;
         }
@@ -115,11 +175,19 @@
             box-shadow: var(--shadow);
         }
 
+        .btn-outline-light {
+            border-radius: 8px !important;
+        }
+
+        .btn-lg {
+            border-radius: 8px !important;
+        }
+
         /* Hero Section */
         .hero {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
             color: white;
-            padding: 120px 0 80px;
+            padding: 240px 0 40px;
             position: relative;
             overflow: hidden;
         }
@@ -167,7 +235,7 @@
 
         /* Features Section */
         .features {
-            padding: 100px 0;
+            padding: 50px 0 50px;
             background: var(--secondary-color);
         }
 
@@ -196,8 +264,19 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 1.5rem;
-            color: white;
+            color: white !important;
             font-size: 2rem;
+        }
+
+        .feature-icon i {
+            color: white !important;
+            font-size: 2rem !important;
+            line-height: 1 !important;
+            display: inline-block !important;
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+            font-weight: 900 !important;
+            text-rendering: auto !important;
+            -webkit-font-smoothing: antialiased !important;
         }
 
         .feature-card h4 {
@@ -213,7 +292,7 @@
 
         /* Domains Section */
         .domains {
-            padding: 100px 0;
+            padding: 50px 0;
         }
 
         .domain-card {
@@ -232,8 +311,25 @@
         }
 
         .domain-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #6c757d;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .domain-card:hover .domain-icon {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white;
+            border-color: var(--primary-color);
+            transform: scale(1.1);
         }
 
         .domain-card h5 {
@@ -249,7 +345,7 @@
 
         /* Pricing Section */
         .pricing {
-            padding: 100px 0;
+            padding: 50px 0;
             background: var(--secondary-color);
         }
 
@@ -329,7 +425,7 @@
 
         /* CTA Section */
         .cta {
-            padding: 100px 0;
+            padding: 50px 0;
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
             color: white;
             text-align: center;
@@ -352,7 +448,7 @@
             color: var(--primary-color);
             border: none;
             padding: 1rem 2.5rem;
-            border-radius: 50px;
+            border-radius: 8px;
             font-weight: 600;
             font-size: 1.1rem;
             transition: all 0.3s ease;
@@ -427,7 +523,7 @@
             }
 
             .hero {
-                padding: 80px 0 60px;
+                padding: 80px 0 30px;
                 text-align: center;
             }
 
@@ -446,6 +542,27 @@
                 padding: 0.75rem 1.5rem;
                 font-size: 0.9rem;
             }
+
+            .features {
+                padding: 25px 0 40px;
+            }
+
+            .domains {
+                padding: 40px 0;
+            }
+
+            .pricing {
+                padding: 40px 0;
+            }
+
+            .cta {
+                padding: 30px 0;
+            }
+
+            .logo-image {
+                width: 80px;
+                height: 80px;
+            }
         }
     </style>
 </head>
@@ -454,10 +571,7 @@
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="#home">
-                <div class="logo-icon">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                UBS
+                <img src="/static/assets/images/UBS_Nac.png" alt="UBS Logo" class="logo-image-large">
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -478,8 +592,7 @@
                 </ul>
                 
                 <div class="navbar-nav">
-                    <a href="login.html" class="btn btn-outline-primary me-2">Entrar</a>
-                    <a href="register.html" class="btn btn-primary">Começar Grátis</a>
+                    <a href="/login" class="btn btn-outline-primary">Entrar</a>
                 </div>
             </div>
         </div>
@@ -494,7 +607,7 @@
                     <p class="lead animate-on-scroll">Sistema universal de agendamentos via WhatsApp com inteligência artificial. Perfeito para salões, clínicas, consultorias e muito mais.</p>
                     
                     <div class="d-flex flex-wrap gap-3 animate-on-scroll">
-                        <a href="register.html" class="btn btn-white btn-lg">
+                        <a href="/register" class="btn btn-white btn-lg">
                             <i class="fas fa-rocket me-2"></i>
                             Começar Grátis
                         </a>
@@ -540,7 +653,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card animate-on-scroll">
                         <div class="feature-icon">
-                            <i class="fas fa-robot"></i>
+                            <i class="fas fa-brain"></i>
                         </div>
                         <h4>IA Especializada</h4>
                         <p>7 agentes de IA especializados por segmento: saúde, beleza, educação, jurídico, esportes, consultoria e geral.</p>
@@ -560,7 +673,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card animate-on-scroll">
                         <div class="feature-icon">
-                            <i class="fas fa-calendar-sync"></i>
+                            <i class="fas fa-calendar-check"></i>
                         </div>
                         <h4>Google Calendar</h4>
                         <p>Sincronização automática com Google Calendar. Nunca mais perca um agendamento ou tenha conflitos.</p>
@@ -570,7 +683,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card animate-on-scroll">
                         <div class="feature-icon">
-                            <i class="fas fa-envelope"></i>
+                            <i class="fas fa-paper-plane"></i>
                         </div>
                         <h4>Email Automático</h4>
                         <p>Confirmações, lembretes e notificações automáticas via email. Reduza no-shows em até 80%.</p>
@@ -580,7 +693,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card animate-on-scroll">
                         <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-chart-bar"></i>
                         </div>
                         <h4>Analytics Avançado</h4>
                         <p>Dashboard completo com métricas de negócio, performance da IA e insights para crescimento.</p>
@@ -590,7 +703,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="feature-card animate-on-scroll">
                         <div class="feature-icon">
-                            <i class="fas fa-images"></i>
+                            <i class="fas fa-layer-group"></i>
                         </div>
                         <h4>Multi-modal</h4>
                         <p>Processa texto, imagens, áudio e documentos. IA que entende fotos, áudios e PDFs.</p>
@@ -613,7 +726,9 @@
             <div class="row g-4">
                 <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="domain-card animate-on-scroll">
-                        <div class="domain-icon">💄</div>
+                        <div class="domain-icon">
+                            <i class="fas fa-cut"></i>
+                        </div>
                         <h5>Beleza</h5>
                         <p>Salões, estética, cabeleireiros</p>
                     </div>
@@ -621,7 +736,9 @@
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="domain-card animate-on-scroll">
-                        <div class="domain-icon">🏥</div>
+                        <div class="domain-icon">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
                         <h5>Saúde</h5>
                         <p>Clínicas, psicólogos, terapeutas</p>
                     </div>
@@ -629,7 +746,9 @@
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="domain-card animate-on-scroll">
-                        <div class="domain-icon">⚖️</div>
+                        <div class="domain-icon">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
                         <h5>Jurídico</h5>
                         <p>Advogados, escritórios, consultoria</p>
                     </div>
@@ -637,7 +756,9 @@
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="domain-card animate-on-scroll">
-                        <div class="domain-icon">📚</div>
+                        <div class="domain-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
                         <h5>Educação</h5>
                         <p>Professores, tutores, cursos</p>
                     </div>
@@ -645,7 +766,9 @@
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="domain-card animate-on-scroll">
-                        <div class="domain-icon">💪</div>
+                        <div class="domain-icon">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
                         <h5>Esportes</h5>
                         <p>Personal trainers, academias</p>
                     </div>
@@ -653,7 +776,9 @@
                 
                 <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="domain-card animate-on-scroll">
-                        <div class="domain-icon">💼</div>
+                        <div class="domain-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
                         <h5>Consultoria</h5>
                         <p>Consultores, coaching, negócios</p>
                     </div>
@@ -686,7 +811,7 @@
                             <li><i class="fas fa-check"></i> Email automático</li>
                             <li><i class="fas fa-check"></i> Dashboard básico</li>
                         </ul>
-                        <a href="register.html?plan=starter" class="btn btn-outline-primary w-100">Começar Agora</a>
+                        <a href="/register?plan=starter" class="btn btn-outline-primary w-100">Começar Agora</a>
                     </div>
                 </div>
                 
@@ -705,7 +830,7 @@
                             <li><i class="fas fa-check"></i> Analytics completo</li>
                             <li><i class="fas fa-check"></i> Suporte prioritário</li>
                         </ul>
-                        <a href="register.html?plan=professional" class="btn btn-primary w-100">Começar Agora</a>
+                        <a href="/register?plan=professional" class="btn btn-primary w-100">Começar Agora</a>
                     </div>
                 </div>
                 
@@ -725,7 +850,7 @@
                             <li><i class="fas fa-check"></i> API personalizada</li>
                             <li><i class="fas fa-check"></i> Suporte dedicado</li>
                         </ul>
-                        <a href="register.html?plan=enterprise" class="btn btn-outline-primary w-100">Falar com Vendas</a>
+                        <a href="/register?plan=enterprise" class="btn btn-outline-primary w-100">Falar com Vendas</a>
                     </div>
                 </div>
             </div>
@@ -744,9 +869,9 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 mx-auto text-center">
-                    <h2>Pronto para Automatizar seu Negócio?</h2>
-                    <p>Junte-se a centenas de empresas que já automatizaram seus agendamentos com nossa IA.</p>
-                    <a href="register.html" class="btn btn-white btn-lg">
+                    <h2>Pronto para Automatizar seu Serviço de Agendamento?</h2>
+                    <p>Junte-se a empresas que já automatizaram seus agendamentos com nossa IA.</p>
+                    <a href="/register" class="btn btn-white btn-lg">
                         <i class="fas fa-rocket me-2"></i>
                         Começar Gratuitamente
                     </a>
@@ -761,12 +886,9 @@
             <div class="row">
                 <div class="col-lg-4">
                     <div class="d-flex align-items-center mb-3">
-                        <div class="logo-icon me-3">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <h4 class="mb-0">UBS</h4>
+                        <img src="/static/assets/images/UBS_Nac.png" alt="UBS Logo" class="logo-image" style="width: 120px; height: 120px;">
                     </div>
-                    <p class="text-muted">Sistema Universal de Agendamento com IA. Automatize seu negócio e melhore a experiência dos seus clientes.</p>
+                    <p class="text-muted">Automatize seu negócio e melhore a experiência dos seus clientes.</p>
                 </div>
                 
                 <div class="col-lg-2 col-md-3">
@@ -811,13 +933,14 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2025 UBS - Universal Booking System. Todos os direitos reservados.</p>
+                <p>&copy; 2025 UBS. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         // Navbar scroll effect
         window.addEventListener('scroll', function() {
@@ -848,18 +971,50 @@
             observer.observe(el);
         });
 
-        // Smooth scrolling for anchor links
+        // Smooth scrolling for anchor links only (not external or route links)
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                const href = this.getAttribute('href');
+                // Only prevent default for internal anchor links
+                if (href && href.startsWith('#')) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        // Close mobile menu if open
+                        const navbarCollapse = document.querySelector('.navbar-collapse');
+                        if (navbarCollapse.classList.contains('show')) {
+                            bootstrap.Collapse.getInstance(navbarCollapse).hide();
+                        }
+                        
+                        // Smooth scroll with offset for fixed navbar
+                        const offsetTop = target.offsetTop - 80;
+                        window.scrollTo({
+                            top: offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             });
+        });
+
+        // Ensure pricing buttons work properly
+        document.querySelectorAll('a[href*="/register"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Allow normal navigation for register links
+                console.log('Navigating to:', this.getAttribute('href'));
+            });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const navbar = document.querySelector('.navbar-collapse');
+            const toggler = document.querySelector('.navbar-toggler');
+            
+            if (!navbar.contains(e.target) && !toggler.contains(e.target)) {
+                if (navbar.classList.contains('show')) {
+                    bootstrap.Collapse.getInstance(navbar).hide();
+                }
+            }
         });
     </script>
 </body>
